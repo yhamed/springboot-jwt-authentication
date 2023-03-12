@@ -57,6 +57,12 @@ public class AuthenticationService {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = initRoles(userDetails);
 
+        if (isSuspendedUser(userDetails)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse(ACCOUNT_SUSPENDED));
+        }
+
         return ResponseEntity.ok(new JwtResponse(jwtUtils.generateJwtToken(authentication),
                 userDetails.getId(),
                 userDetails.getUsername(),
@@ -68,5 +74,9 @@ public class AuthenticationService {
         return userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
+    }
+
+    private static boolean isSuspendedUser(UserDetailsImpl userDetails) {
+        return !userDetails.getAuthorities().contains(new SimpleGrantedAuthority(ROLE_USER.getRoleId()));
     }
 }
