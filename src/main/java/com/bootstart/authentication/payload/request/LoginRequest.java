@@ -1,8 +1,18 @@
 package com.bootstart.authentication.payload.request;
 
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 
-public class LoginRequest {
+public class LoginRequest implements Serializable {
+
+    public LoginRequest() {
+    }
+
+    public LoginRequest(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
     @NotBlank
     private String username;
 

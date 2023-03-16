@@ -1,5 +1,6 @@
 package com.bootstart.authentication.security.services;
 
+import com.bootstart.authentication.models.ERole;
 import com.bootstart.authentication.models.Role;
 import com.bootstart.authentication.models.User;
 import com.bootstart.authentication.payload.request.SignupRequest;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.bootstart.authentication.models.ERole.*;
 import static com.bootstart.authentication.models.ERole.ROLE_USER;
 import static com.bootstart.authentication.payload.response.MessageResponse.*;
 
@@ -33,11 +35,11 @@ public class SignupService {
 
     public ResponseEntity<?> doSignup(SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return returnBadRequest(USERNAME_EXISTS);
+            return badRequest(USERNAME_EXISTS);
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return returnBadRequest(MAIL_EXISTS);
+            return badRequest(MAIL_EXISTS);
         }
 
         createNewUser(signUpRequest);
@@ -45,7 +47,7 @@ public class SignupService {
         return ResponseEntity.ok(new MessageResponse(USER_CREATION_SUCCESS));
     }
 
-    private static ResponseEntity<MessageResponse> returnBadRequest(String message) {
+    private static ResponseEntity<MessageResponse> badRequest(String message) {
         return ResponseEntity
                 .badRequest()
                 .body(new MessageResponse(message));
@@ -56,13 +58,17 @@ public class SignupService {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
 
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ROLE_USER)
+        Role userRole = roleRepository.findByName(ROLE_USER)
+                .orElseThrow(() -> new RuntimeException(ROLE_NOT_FOUND));
+        roles.add(userRole);
+
+
+        if (userRepository.findAll().isEmpty()) {
+            Role adminRole = roleRepository.findByName(ROLE_ADMIN)
                     .orElseThrow(() -> new RuntimeException(ROLE_NOT_FOUND));
-            roles.add(userRole);
+            roles.add(adminRole);
         }
 
         user.setRoles(roles);

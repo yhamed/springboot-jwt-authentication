@@ -15,6 +15,7 @@ spring.jpa.hibernate.ddl-auto=update
 logging.file.path=LOGS
 # jwt config
 authorization.app.jwtSecret=secretKey
+# will be valid for one day // can be changed to 10000 in order to test the token expiration use case
 authorization.app.jwtExpirationMs=86400000
 ```
 
