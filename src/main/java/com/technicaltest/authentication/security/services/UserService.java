@@ -9,6 +9,7 @@ import com.technicaltest.authentication.payload.response.MessageResponse;
 import com.technicaltest.authentication.repository.RoleRepository;
 import com.technicaltest.authentication.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,13 @@ public class UserService {
         if (hasValidCredentials(optionalUser, passwordChangeRequest.getId())) {
             return badRequest(MessageResponse.USER_NOT_FOUND);
         }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!userDetails.getUsername().equalsIgnoreCase(passwordChangeRequest.getUsername())) {
+            return badRequest(MessageResponse.USER_NOT_FOUND);
+        }
+
 
         User user = optionalUser.get();
         user.setPassword(encoder.encode(passwordChangeRequest.getPassword()));

@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -193,6 +196,42 @@ class UserServiceTest {
     }
 
     @Test
+    public void passwordChangeCaseNotCurrentConnectedUser() {
+        // Setup
+        User user = new User();
+        user.setUsername("admin");
+        user.setId(1l);
+        Optional<User> optionalUser = Optional.of(user);
+        doReturn(optionalUser).when(userRepository).findByUsername("admin");
+
+        mockSecurityContextHolderUserName("admin2");
+
+        // Test
+        PasswordChangeRequest passwordChangeRequest = new PasswordChangeRequest();
+        passwordChangeRequest.setId(1L);
+        passwordChangeRequest.setUsername("admin");
+        passwordChangeRequest.setPassword("password");
+
+        MessageResponse messageResponse = userService.changePassword(passwordChangeRequest).getBody();
+
+        // Assertions
+        assertThat(messageResponse.getMessage()).isEqualTo(USER_NOT_FOUND);
+        verify(userRepository).findByUsername("admin");
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    private static void mockSecurityContextHolderUserName(String userName) {
+        UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+        doReturn(userName).when(userDetails).getUsername();
+        Authentication authentication = mock(Authentication.class);
+        doReturn(userDetails).when(authentication).getPrincipal();
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        doReturn(authentication).when(securityContext).getAuthentication();
+        SecurityContextHolder.setContext(securityContext);
+    }
+
+    @Test
     public void passwordChangeCaseSuccess() {
         // Setup
         User user = new User();
@@ -203,6 +242,8 @@ class UserServiceTest {
         doReturn(optionalUser).when(userRepository).findByUsername("admin");
 
         doReturn("encryptedPassword").when(encoder).encode(any());
+
+        mockSecurityContextHolderUserName("admin");
 
         // Test
         PasswordChangeRequest passwordChangeRequest = new PasswordChangeRequest(1L, "admin", "password");
