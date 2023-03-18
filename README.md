@@ -1,6 +1,7 @@
 # JWT Authentication & Authorization - Spring boot backend
 This application uses Java 17
 PostgreSQL DB
+## Requirements:
 
 ## Configure Spring Datasource, JPA, App properties
 ```
@@ -20,8 +21,9 @@ authorization.app.jwtExpirationMs=86400000
 ```
 
 # In order to run the app:
-## Step 1: Run postgresql DB docker image locally or change application properties datasource config Or reconfigure datasource to point at own local postgresSQL Instance
+## Step 1: Run postgresql DB docker image locally or change application properties datasource config or reconfigure datasource to point at preferred postgresSQL
 ```
+Install docker for windows and run the following command.
 docker run --name some-postgres -p 32768:5432 -e POSTGRES_PASSWORD=postgres -d postgres
 ```
 
