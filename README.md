@@ -23,14 +23,15 @@ authorization.app.jwtExpirationMs=86400000
 # In order to run the app:
 ## Step 1: Run postgresql DB docker image locally or change application properties datasource config or reconfigure datasource to point at preferred postgresSQL
 ```
+Install Java and have JAVA_HOME pointing to JDK-17
 Install docker for windows and run the following command.
 docker run --name some-postgres -p 32768:5432 -e POSTGRES_PASSWORD=postgres -d postgres
 ```
 
 ## Step 2: Run Spring Boot application
 ```
-mvn clean install
-mvn spring-boot:run
+mvnw clean install
+mvnw spring-boot:run
 ```
 # Notice:
 ## Database schemas to be reserved:
