@@ -34,5 +34,6 @@ mvn spring-boot:run
 ## Database schemas to be reserved:
 
 --------------------------------------------------------------------------------
+* First user to signUp will have the Admin role
 * Public schema -  by default for Runtime - updatable in application.properties
 * Test Schema - for Integration Tests - Make sure to change this schema name in application.test.properties &  initTestSchema.sql to avoid data loss
