@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.bootstart</groupId>
 	<artifactId>authentication</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>User authentication skeleton</name>
 	<description>User authentication skeleton that&apos;ll serve as a backend for user management front</description>
 	<properties>

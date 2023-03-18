@@ -62,10 +62,10 @@ ALTER TABLE ONLY test.roles
     ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY test.users
-    ADD CONSTRAINT uk6dotkott2kjsp8vw4d0m25fb7 UNIQUE (email);
+    ADD CONSTRAINT uk6dotkott2kjsp8vw4d0m25fb7 UNIQUE (email) ON CONFLICT DO NOTHING;
 
 ALTER TABLE ONLY test.users
-    ADD CONSTRAINT ukr43af9ap4edm43mmtq01oddj6 UNIQUE (username);
+    ADD CONSTRAINT ukr43af9ap4edm43mmtq01oddj6 UNIQUE (username) ON CONFLICT DO NOTHING;
 
 ALTER TABLE ONLY test.user_roles
     ADD CONSTRAINT user_roles_pkey PRIMARY KEY (user_id, role_id);
@@ -74,10 +74,10 @@ ALTER TABLE ONLY test.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY test.user_roles
-    ADD CONSTRAINT fkh8ciramu9cc9q3qcqiv4ue8a6 FOREIGN KEY (role_id) REFERENCES test.roles(id);
+    ADD CONSTRAINT fkh8ciramu9cc9q3qcqiv4ue8a6 FOREIGN KEY (role_id) REFERENCES test.roles(id) ON CONFLICT DO NOTHING;
 
 ALTER TABLE ONLY test.user_roles
-    ADD CONSTRAINT fkhfh9dx7w3ubf1co1vdev94g3f FOREIGN KEY (user_id) REFERENCES test.users(id);
+    ADD CONSTRAINT fkhfh9dx7w3ubf1co1vdev94g3f FOREIGN KEY (user_id) REFERENCES test.users(id) ON CONFLICT DO NOTHING;
 
 INSERT INTO roles(id, name)
 VALUES (1, 'ROLE_USER') ON CONFLICT DO NOTHING;
