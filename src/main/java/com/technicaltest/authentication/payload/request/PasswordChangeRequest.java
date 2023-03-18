@@ -1,6 +1,7 @@
 package com.technicaltest.authentication.payload.request;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class PasswordChangeRequest implements Serializable {
         this.password = password;
     }
 
-    @NotBlank
+    @NotNull
     private Long id;
 
     @NotBlank

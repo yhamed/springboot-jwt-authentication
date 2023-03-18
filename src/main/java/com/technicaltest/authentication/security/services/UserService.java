@@ -1,10 +1,9 @@
 package com.technicaltest.authentication.security.services;
 
-import com.technicaltest.authentication.models.ERole;
 import com.technicaltest.authentication.models.Role;
 import com.technicaltest.authentication.models.User;
 import com.technicaltest.authentication.payload.request.PasswordChangeRequest;
-import com.technicaltest.authentication.payload.request.UserUpdateRequest;
+import com.technicaltest.authentication.payload.request.UserRoleUpdateRequest;
 import com.technicaltest.authentication.payload.response.MessageResponse;
 import com.technicaltest.authentication.repository.RoleRepository;
 import com.technicaltest.authentication.repository.UserRepository;
@@ -14,8 +13,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.technicaltest.authentication.models.ERole.*;
+import static com.technicaltest.authentication.payload.response.MessageResponse.*;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @Service
 public class UserService {
@@ -32,53 +37,83 @@ public class UserService {
         this.encoder = encoder;
     }
 
-    public ResponseEntity<MessageResponse> updateUser(UserUpdateRequest userUpdateRequest) {
-        Optional<User> optionalUser = userRepository.findByUsername(userUpdateRequest.getUsername());
-        if (hasValidCredentials(optionalUser, userUpdateRequest.getId())) {
-            return badRequest(MessageResponse.USER_NOT_FOUND);
+    public ResponseEntity<MessageResponse> updateUserRoles(UserRoleUpdateRequest userRoleUpdateRequest) {
+        Optional<User> optionalUser = userRepository.findByUsername(userRoleUpdateRequest.getUsername());
+        if (hasValidCredentials(optionalUser, userRoleUpdateRequest.getId())) {
+            return badRequest(USER_NOT_FOUND);
+        }
+
+        UserDetailsImpl userDetails = getConnectedUSer();
+        if (userDetails.getUsername().equals(optionalUser.get().getUsername())) {
+            return badRequest(CAN_NOT_REVOKE_OWN_AUTHORITY);
         }
 
         User user = optionalUser.get();
-
-        user.setEmail(userUpdateRequest.getEmail());
-        user.setPassword(encoder.encode(userUpdateRequest.getPassword()));
-
         Set<Role> roles = new HashSet<>();
 
         try {
-            userUpdateRequest.getRoles().stream().forEach(role -> {
-                roles.add(roleRepository.findByName(ERole.valueOf(role))
-                        .orElseThrow(() -> new RuntimeException(MessageResponse.ROLE_NOT_FOUND)));
+            userRoleUpdateRequest.getRoles().stream().forEach(role -> {
+                roles.add(roleRepository.findByName(valueOf(role))
+                        .orElseThrow(() -> new RuntimeException(ROLE_NOT_FOUND)));
             });
             user.setRoles(roles);
         } catch (RuntimeException runtimeException) {
-            return badRequest(MessageResponse.ROLE_NOT_FOUND);
+            return badRequest(ROLE_NOT_FOUND);
         }
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse(MessageResponse.USER_UPDATE_SUCCESS));
+        return ResponseEntity.ok(new MessageResponse(USER_ROLE_UPDATE_SUCCESS));
+    }
+
+    private static UserDetailsImpl getConnectedUSer() {
+        return (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     public ResponseEntity<MessageResponse> changePassword(PasswordChangeRequest passwordChangeRequest) {
         Optional<User> optionalUser = userRepository.findByUsername(passwordChangeRequest.getUsername());
         if (hasValidCredentials(optionalUser, passwordChangeRequest.getId())) {
-            return badRequest(MessageResponse.USER_NOT_FOUND);
+            return new ResponseEntity(new MessageResponse(USER_NOT_FOUND), FORBIDDEN);
         }
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (isCurrentUser(passwordChangeRequest.getUsername()) || isAdmin()) {
+            User user = optionalUser.get();
+            user.setPassword(encoder.encode(passwordChangeRequest.getPassword()));
 
-        if (!userDetails.getUsername().equalsIgnoreCase(passwordChangeRequest.getUsername())) {
-            return badRequest(MessageResponse.USER_NOT_FOUND);
+            userRepository.save(user);
+
+            return ResponseEntity.ok(new MessageResponse(PASSWORD_CHANGE_SUCCESS));
         }
+        return new ResponseEntity(new MessageResponse(USER_NOT_FOUND), FORBIDDEN);
+    }
 
+    public ResponseEntity<MessageResponse> deleteUser(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        UserDetailsImpl userDetails = getConnectedUSer();
+        if (optionalUser.isPresent()) {
+            if (userDetails.getUsername().equals(optionalUser.get().getUsername())) {
+                return badRequest(CAN_NOT_DELETE_OWN_ACCOUNT);
+            }
+            userRepository.delete(optionalUser.get());
+            return ResponseEntity.ok(new MessageResponse(USER_DELETION_SUCCESS));
+        }
+        return badRequest(USER_NOT_FOUND);
+    }
 
-        User user = optionalUser.get();
-        user.setPassword(encoder.encode(passwordChangeRequest.getPassword()));
+    public ResponseEntity<List<User>> findAll() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
 
-        userRepository.save(user);
+    private static boolean isCurrentUser(String username) {
+        UserDetailsImpl userDetails = getConnectedUSer();
+        return userDetails.getUsername().equalsIgnoreCase(username);
+    }
 
-        return ResponseEntity.ok(new MessageResponse(MessageResponse.PASSWORD_CHANGE_SUCCESS));
+    private static boolean isAdmin() {
+        UserDetailsImpl userDetails = getConnectedUSer();
+        return userDetails.getAuthorities().stream()
+                .map(role -> role.getAuthority().toUpperCase())
+                .collect(Collectors.toList()).contains(ROLE_ADMIN.getRoleId());
     }
 
     private static boolean hasValidCredentials(Optional<User> optionalUser, Long id) {
@@ -90,5 +125,4 @@ public class UserService {
                 .badRequest()
                 .body(new MessageResponse(message));
     }
-
 }

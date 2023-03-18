@@ -1,10 +1,13 @@
 package com.technicaltest.authentication.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -29,6 +32,7 @@ public class User {
 
     @NotBlank
     @Size(max = 120)
+    @JsonIgnore
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -84,5 +88,37 @@ public class User {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+
+        if (!id.equals(user.id)) return false;
+        if (!username.equals(user.username)) return false;
+        if (!Objects.equals(email, user.email)) return false;
+        if (!Objects.equals(password, user.password)) return false;
+        return Objects.equals(roles, user.roles);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Integer.parseInt(id + "1");
+        result = 31 * result + username.hashCode();
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (roles != null ? roles.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", roles=" + roles +
+                '}';
     }
 }

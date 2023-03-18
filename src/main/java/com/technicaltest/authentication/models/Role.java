@@ -16,7 +16,6 @@ public class Role implements Serializable {
     private ERole name;
 
     public Role() {
-
     }
 
     public Role(ERole name) {
@@ -42,9 +41,7 @@ public class Role implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Role role = (Role) o;
+        if (!(o instanceof Role role)) return false;
 
         if (!id.equals(role.id)) return false;
         return name == role.name;
