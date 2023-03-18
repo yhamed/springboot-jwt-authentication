@@ -30,8 +30,8 @@ docker run --name some-postgres -p 32768:5432 -e POSTGRES_PASSWORD=postgres -d p
 
 ## Step 2: Run Spring Boot application
 ```
-mvnw clean install
-mvnw spring-boot:run
+./mvnw clean install
+./mvnw spring-boot:run
 ```
 # Notice:
 ## Database schemas to be reserved:
