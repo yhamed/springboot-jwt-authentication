@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  app:
+    image: 'springboot-jwt:latest'
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    container_name: springboot-jwt
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres?currentSchema=public
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+      - logging.file.path=LOGS
+      - authorization.app.jwtSecret=secretKey
+      - authorization.app.jwtExpirationMs=86400000
+      - spring.jpa.hibernate.ddl-auto=update
+  postgres:
+    image: 'postgres:latest'
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
